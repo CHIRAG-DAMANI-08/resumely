@@ -15,7 +15,7 @@ const Resume = () => {
     const { id } = useParams();
     const [imageUrl, setImageUrl] = useState('');
     const [resumeUrl, setResumeUrl] = useState('');
-    const [feedback, setFeedback] = useState<Feedback | null>(null);
+    const [feedback, setFeedback] = useState<any>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,7 +24,21 @@ const Resume = () => {
 
     useEffect(() => {
         const loadResume = async () => {
-            const resume = await kv.get(`resume:${id}`);
+            let resumeId = id;
+            
+            // If no specific resume ID, try to load the user's latest resume
+            if (!resumeId && auth.isAuthenticated && auth.user) {
+                const latestId = await kv.get(`user:${auth.user.uuid}:latest-resume`);
+                if (latestId) {
+                    resumeId = latestId;
+                }
+            }
+            
+            if (!resumeId) {
+                return;
+            }
+            
+            const resume = await kv.get(`resume:${resumeId}`);
 
             if(!resume) return;
 
@@ -47,7 +61,7 @@ const Resume = () => {
         }
 
         loadResume();
-    }, [id]);
+    }, [id, auth.isAuthenticated, auth.user]);
 
     return (
         <main className="!pt-0">

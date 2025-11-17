@@ -21,9 +21,36 @@ const Upload = () => {
     const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file }: { companyName: string, jobTitle: string, jobDescription: string, file: File  }) => {
         setIsProcessing(true);
 
+        setStatusText('Preparing upload...');
+
+        // Ensure user is authenticated and refresh user info for new accounts
+        if (!auth.isAuthenticated) {
+            navigate(`/auth?next=/upload`);
+            return;
+        }
+
+        try {
+            await auth.refreshUser();
+        } catch (e) {
+            // ignore refresh error and proceed with whatever user info is available
+        }
+
+    const user = usePuterStore.getState().auth.user;
+    const userId = user?.uuid || `anon-${generateUUID()}`;
+
+        const uuid = generateUUID();
+
+        // Create user-scoped filenames to avoid collisions between accounts
+        // Use upload which manages file placement, but use unique names per user
+        const resumeFileName = `resume_${userId}_${uuid}.pdf`;
+        const imageFileName = `resume_${userId}_${uuid}.png`;
+
         setStatusText('Uploading the file...');
         const uploadedFile = await fs.upload([file]);
         if(!uploadedFile) return setStatusText('Error: Failed to upload file');
+        
+        // Get the uploaded file path and store it with user namespace in KV
+        const resumePath = `${uploadedFile.path}`;
 
         setStatusText('Converting to image...');
         const imageFile = await convertPdfToImage(file);
@@ -32,22 +59,29 @@ const Upload = () => {
         setStatusText('Uploading the image...');
         const uploadedImage = await fs.upload([imageFile.file]);
         if(!uploadedImage) return setStatusText('Error: Failed to upload image');
+        
+        const imagePath = `${uploadedImage.path}`;
 
         setStatusText('Preparing data...');
-        const uuid = generateUUID();
+
         const data = {
             id: uuid,
-            resumePath: uploadedFile.path,
-            imagePath: uploadedImage.path,
+            resumePath,
+            imagePath,
             companyName, jobTitle, jobDescription,
             feedback: '',
         }
+        // Store by resume UUID
         await kv.set(`resume:${uuid}`, JSON.stringify(data));
+        
+        // ALSO store a pointer to the latest resume for this user
+        // This ensures we can always get the most recent one
+        await kv.set(`user:${userId}:latest-resume`, uuid);
 
         setStatusText('Analyzing...');
 
         const feedback = await ai.feedback(
-            uploadedFile.path,
+            resumePath,
             prepareInstructions({ jobTitle, jobDescription })
         )
         if (!feedback) return setStatusText('Error: Failed to analyze resume');
