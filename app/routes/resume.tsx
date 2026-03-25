@@ -4,9 +4,12 @@ import {usePuterStore} from "~/lib/puter";
 import Summary from "~/components/Summary";
 import ATS from "~/components/ATS";
 import Details from "~/components/Details";
+import ScoreHistory from "~/components/ScoreHistory";
+import KeywordGap from "~/components/KeywordGap";
+import { type KeywordGapAnalysis } from "../../constants";
 
 export const meta = () => ([
-    { title: 'Resumind | Review ' },
+    { title: 'Resumely | Review' },
     { name: 'description', content: 'Detailed overview of your resume' },
 ])
 
@@ -15,7 +18,9 @@ const Resume = () => {
     const { id } = useParams();
     const [imageUrl, setImageUrl] = useState('');
     const [resumeUrl, setResumeUrl] = useState('');
-    const [feedback, setFeedback] = useState<any>(null);
+    const [feedback, setFeedback] = useState<Feedback | null>(null);
+    const [keywordData, setKeywordData] = useState<KeywordGapAnalysis | null>(null);
+    const [jobTitle, setJobTitle] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -42,25 +47,35 @@ const Resume = () => {
 
             if(!resume) return;
 
-            const data = JSON.parse(resume);
+            const data = JSON.parse(resume) as Resume;
+
+            setJobTitle(data.jobTitle || '');
 
             const resumeBlob = await fs.read(data.resumePath);
             if(!resumeBlob) return;
 
             const pdfBlob = new Blob([resumeBlob], { type: 'application/pdf' });
-            const resumeUrl = URL.createObjectURL(pdfBlob);
-            setResumeUrl(resumeUrl);
+            const newResumeUrl = URL.createObjectURL(pdfBlob);
+            setResumeUrl(newResumeUrl);
 
             const imageBlob = await fs.read(data.imagePath);
             if(!imageBlob) return;
-            const imageUrl = URL.createObjectURL(imageBlob);
-            setImageUrl(imageUrl);
+            const newImageUrl = URL.createObjectURL(imageBlob);
+            setImageUrl(newImageUrl);
 
             setFeedback(data.feedback);
-            console.log({resumeUrl, imageUrl, feedback: data.feedback });
+            if (data.keywordGapAnalysis) {
+                setKeywordData(data.keywordGapAnalysis);
+            }
+            console.log({resumeUrl: newResumeUrl, imageUrl: newImageUrl, feedback: data.feedback, gapData: data.keywordGapAnalysis });
         }
 
         loadResume();
+
+        return () => {
+            if (imageUrl) URL.revokeObjectURL(imageUrl);
+            if (resumeUrl) URL.revokeObjectURL(resumeUrl);
+        };
     }, [id, auth.isAuthenticated, auth.user]);
 
     return (
@@ -92,6 +107,10 @@ const Resume = () => {
                             <Summary feedback={feedback} />
                             <ATS score={feedback.ATS.score || 0} suggestions={feedback.ATS.tips || []} />
                             <Details feedback={feedback} />
+                            <KeywordGap data={keywordData} />
+                            {auth.user?.uuid && jobTitle && (
+                                <ScoreHistory userId={auth.user.uuid} jobTitle={jobTitle} />
+                            )}
                         </div>
                     ) : (
                         <img src="/images/resume-scan-2.gif" className="w-full" />

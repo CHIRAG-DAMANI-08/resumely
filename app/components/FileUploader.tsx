@@ -6,6 +6,13 @@ interface FileUploaderProps {
     onFileSelect?: (file: File | null) => void;
 }
 
+const getFileIcon = (fileName: string): string => {
+    const ext = fileName.toLowerCase().split('.').pop();
+    if (ext === 'pdf') return '/images/pdf.png';
+    if (ext === 'doc' || ext === 'docx') return '/images/pdf.png'; // Using PDF icon for docs too
+    return '/icons/info.svg';
+};
+
 const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const file = acceptedFiles[0] || null;
@@ -18,7 +25,14 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
     const {getRootProps, getInputProps, isDragActive, acceptedFiles} = useDropzone({
         onDrop,
         multiple: false,
-        accept: { 'application/pdf': ['.pdf']},
+        accept: { 
+            'application/pdf': ['.pdf'],
+            'application/msword': ['.doc'],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+            'image/jpeg': ['.jpg', '.jpeg'],
+            'image/png': ['.png'],
+            'image/webp': ['.webp'],
+        },
         maxSize: maxFileSize,
     })
 
@@ -34,7 +48,7 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
                 <div className="space-y-4 cursor-pointer">
                     {file ? (
                         <div className="uploader-selected-file" onClick={(e) => e.stopPropagation()}>
-                            <img src="/images/pdf.png" alt="pdf" className="size-10" />
+                            <img src={getFileIcon(file.name)} alt={file.name.split('.').pop()} className="size-10" />
                             <div className="flex items-center space-x-3">
                                 <div>
                                     <p className="text-sm font-medium text-gray-700 truncate max-w-xs">
@@ -61,7 +75,7 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
                                     Click to upload
                                 </span> or drag and drop
                             </p>
-                            <p className="text-lg text-gray-500">PDF (max {formatSize(maxFileSize)})</p>
+                            <p className="text-lg text-gray-500">PDF, DOC, DOCX, JPG, PNG (max {formatSize(maxFileSize)})</p>
                         </div>
                     )}
                 </div>

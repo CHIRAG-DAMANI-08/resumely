@@ -6,6 +6,7 @@ const WipeApp = () => {
     const { auth, isLoading, error, clearError, fs, ai, kv } = usePuterStore();
     const navigate = useNavigate();
     const [files, setFiles] = useState<FSItem[]>([]);
+    const [confirmWipe, setConfirmWipe] = useState(false);
 
     const loadFiles = async () => {
         const files = (await fs.readDir("./")) as FSItem[];
@@ -23,10 +24,15 @@ const WipeApp = () => {
     }, [isLoading]);
 
     const handleDelete = async () => {
+        if (!confirmWipe) {
+            setConfirmWipe(true);
+            return;
+        }
         files.forEach(async (file) => {
             await fs.delete(file.path);
         });
         await kv.flush();
+        setConfirmWipe(false);
         loadFiles();
     };
 
@@ -49,13 +55,21 @@ const WipeApp = () => {
                     </div>
                 ))}
             </div>
-            <div>
+            <div className="flex flex-row gap-4 mt-4">
                 <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer"
+                    className={`${confirmWipe ? "bg-red-600" : "bg-blue-500"} text-white px-4 py-2 rounded-md cursor-pointer`}
                     onClick={() => handleDelete()}
                 >
-                    Wipe App Data
+                    {confirmWipe ? "Yes, I'm sure — Wipe Everything" : "Wipe App Data"}
                 </button>
+                {confirmWipe && (
+                    <button
+                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md cursor-pointer"
+                        onClick={() => setConfirmWipe(false)}
+                    >
+                        Cancel
+                    </button>
+                )}
             </div>
         </div>
     );
