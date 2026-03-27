@@ -6,8 +6,10 @@ export default
     route('/auth', 'routes/auth.tsx'),
     route('/upload','routes/upload.tsx' ),
     route('/resume/:id', 'routes/resume.tsx'),
+    route('/compare', 'routes/compare.tsx'),
     route('/wipe', 'routes/wipe.tsx'),
     route('*', 'routes/404.tsx'), // Catch-all for unknown routes
 
 
 ] satisfies RouteConfig;
+

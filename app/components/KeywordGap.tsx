@@ -67,20 +67,27 @@ export default function KeywordGap({ data }: KeywordGapProps) {
                     <p className="text-sm text-gray-500 italic">Great job! You hit all the major keywords.</p>
                 ) : (
                     <div className="flex flex-wrap gap-2">
-                        {missing.map((kw, idx) => (
-                            <span 
-                                key={idx} 
-                                title={kw.suggestedPlacementHint ? `Suggestion: ${kw.suggestedPlacementHint}` : undefined}
-                                className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-                                    kw.importance === 'must_have' 
-                                        ? 'bg-red-50 border-red-200 text-red-700' 
-                                        : 'bg-orange-50 border-orange-200 text-orange-700'
-                                }`}
-                            >
-                                {kw.keyword}
-                                {kw.importance === 'must_have' && <span className="ml-1 text-red-500 font-bold">*</span>}
-                            </span>
-                        ))}
+                        {missing.map((kw, idx) => {
+                            const text = typeof kw === 'string' ? kw : kw.keyword;
+                            if (!text) return null;
+                            const hint = typeof kw === 'string' ? undefined : kw.suggestedPlacementHint;
+                            const isMustHave = typeof kw !== 'string' && kw.importance === 'must_have';
+                            
+                            return (
+                                <span 
+                                    key={idx} 
+                                    title={hint ? `Suggestion: ${hint}` : undefined}
+                                    className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                                        isMustHave 
+                                            ? 'bg-red-50 border-red-200 text-red-700' 
+                                            : 'bg-orange-50 border-orange-200 text-orange-700'
+                                    }`}
+                                >
+                                    {text}
+                                    {isMustHave && <span className="ml-1 text-red-500 font-bold">*</span>}
+                                </span>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -95,14 +102,19 @@ export default function KeywordGap({ data }: KeywordGapProps) {
                     <p className="text-sm text-gray-500 italic">No exact keyword matches found.</p>
                 ) : (
                     <div className="flex flex-wrap gap-2">
-                        {matched.map((kw, idx) => (
-                            <span 
-                                key={idx} 
-                                className="px-3 py-1.5 rounded-full text-sm font-medium bg-green-50 border border-green-200 text-green-700"
-                            >
-                                {kw.keyword}
-                            </span>
-                        ))}
+                        {matched.map((kw, idx) => {
+                            const text = typeof kw === 'string' ? kw : kw.keyword;
+                            if (!text) return null;
+                            
+                            return (
+                                <span 
+                                    key={idx} 
+                                    className="px-3 py-1.5 rounded-full text-sm font-medium bg-green-50 border border-green-200 text-green-700"
+                                >
+                                    {text}
+                                </span>
+                            );
+                        })}
                     </div>
                 )}
             </div>

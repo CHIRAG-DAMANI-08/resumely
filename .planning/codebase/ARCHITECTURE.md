@@ -61,6 +61,7 @@ The `usePuterStore` hook is the single source of truth for:
 | `/auth` | `app/routes/auth.tsx` | Login/logout page using Puter auth |
 | `/upload` | `app/routes/upload.tsx` | **Core workflow** — upload resume, convert to image, analyze with AI |
 | `/resume/:id` | `app/routes/resume.tsx` | View resume + AI feedback (split-screen layout) |
+| `/compare` | `app/routes/compare.tsx` | Side-by-side comparison of 2 resumes with dynamic cross-JD gap analysis |
 | `/wipe` | `app/routes/wipe.tsx` | Admin/debug — wipes all user data (files + KV) |
 | `*` | `app/routes/404.tsx` | 404 catch-all |
 
@@ -77,6 +78,8 @@ The `usePuterStore` hook is the single source of truth for:
 | `ATS` | `app/components/ATS.tsx` | resume |
 | `Details` | `app/components/Details.tsx` | resume |
 | `Accordion` | `app/components/Accordion.tsx` | Details |
+| `KeywordGap` | `app/components/KeywordGap.tsx` | resume, compare |
+| `BulletRewriter` | `app/components/BulletRewriter.tsx` | resume |
 
 ### Layer 5: Utilities & Helpers
 | File | Purpose |
@@ -117,6 +120,13 @@ The `usePuterStore` hook is the single source of truth for:
 
 5. User returns to / (home)
    └→ kv.list("resume:*", true) → load all resumes → render cards
+
+6. User compares resumes (home → /compare)
+   ├→ Toggles Compare Mode and selects two resumes
+   ├→ Navigate to /compare?r1=<id>&r2=<id>
+   ├→ Dynamically fetch metadata + images from KV/FS
+   ├→ Target shared JD + Run real-time client OCR (put.ai.img2txt) if gap analysis missing
+   └→ Render side-by-side AI textual reviews and visual PDF canvases
 ```
 
 ## Authentication Pattern
@@ -131,5 +141,6 @@ The `usePuterStore` hook is the single source of truth for:
 2. **Client-side PDF rendering** — PDFs are converted to images in the browser, not on a server
 3. **Flat KV data model** — No relational database; resumes stored as serialized JSON in KV store
 4. **User-scoped file naming** — Files include `userId` and `uuid` in names to avoid collisions
-5. **SSR enabled but minimal** — React Router SSR is on, but Puter.js only works client-side (loaded via CDN script)
-6. **Single Zustand store** — One monolithic store handles ALL state (auth + fs + ai + kv)
+5. **Dynamic Client AI via OCR** — Features like `/compare` cross-pollination and Bullet Rewriter avoid attachment errors by running `ai.img2txt()` locally and piping the text inline to `ai.chat()`.
+6. **SSR enabled but minimal** — React Router SSR is on, but Puter.js works purely client-side
+7. **Single Zustand store** — One monolithic store handles ALL state (auth + fs + ai + kv)

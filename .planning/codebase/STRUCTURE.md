@@ -23,8 +23,11 @@ resumely/
 │   ├── components/                  # 🧩 Reusable UI components
 │   │   ├── Accordion.tsx            # Generic accordion (context-based, single/multi)
 │   │   ├── ATS.tsx                  # ATS score card with suggestions list
+│   │   ├── BulletRewriter.tsx       # AI-driven bullet point enhancer
 │   │   ├── Details.tsx              # Expandable category details (uses Accordion)
 │   │   ├── FileUploader.tsx         # Drag-and-drop file upload (react-dropzone)
+│   │   ├── JobUrlInput.tsx          # Fast job description parsing via URL
+│   │   ├── KeywordGap.tsx           # Missing keyword visualizer against JD
 │   │   ├── navbar.tsx               # Top navigation bar with logo + upload link
 │   │   ├── resumeCard.tsx           # Resume preview card for dashboard
 │   │   ├── ScoreBadge.tsx           # Colored badge ("Strong"/"Good Start"/"Needs Work")
@@ -40,6 +43,7 @@ resumely/
 │   └── routes/                      # 📄 Page components (route modules)
 │       ├── 404.tsx                   # Catch-all 404 page
 │       ├── auth.tsx                  # Login/logout page
+│       ├── compare.tsx               # Side-by-side resume comparison & cross-analysis
 │       ├── home.tsx                  # Dashboard — lists all resumes
 │       ├── resume.tsx                # Resume detail view with AI feedback
 │       ├── testData.ts              # Random test data generator

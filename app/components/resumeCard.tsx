@@ -3,7 +3,15 @@ import ScoreCircle from "~/components/scoreCircle";
 import {useEffect, useState} from "react";
 import {usePuterStore} from "~/lib/puter";
 
-const ResumeCard = ({ resume, onDelete }: { resume: Resume, onDelete?: () => void }) => {
+interface ResumeCardProps {
+    resume: Resume;
+    onDelete?: () => void;
+    isCompareMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelect?: () => void;
+}
+
+const ResumeCard = ({ resume, onDelete, isCompareMode = false, isSelected = false, onToggleSelect }: ResumeCardProps) => {
     const { fs, kv } = usePuterStore();
     const { id, companyName, jobTitle, feedback, imagePath, resumePath } = resume;
     const [resumeUrl, setResumeUrl] = useState('');
@@ -76,10 +84,20 @@ const ResumeCard = ({ resume, onDelete }: { resume: Resume, onDelete?: () => voi
         setShowDeleteModal(false);
     };
 
-    return (
-        <div className="relative group">
-            <Link to={`/resume/${id}`} className={`resume-card animate-in fade-in duration-1000 ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className="resume-card-header relative">
+    const cardContent = (
+        <>
+            {/* Selection Checkmark Overlay */}
+            {isCompareMode && (
+                <div className={`absolute -top-3 -left-3 z-30 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors shadow-md ${
+                    isSelected 
+                        ? 'bg-blue-600 border-white text-white' 
+                        : 'bg-white border-gray-300 text-transparent'
+                }`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+            )}
+            
+            <div className={`resume-card-header relative ${isCompareMode ? 'pointer-events-none' : ''}`}>
                     <button 
                         onClick={handleDeleteClick}
                         className="absolute top-0 right-0 z-10 p-2 bg-white/80 hover:bg-red-50 text-red-500 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200"
@@ -114,7 +132,29 @@ const ResumeCard = ({ resume, onDelete }: { resume: Resume, onDelete?: () => voi
                         )}
                     </div>
                 </div>
-            </Link>
+        </>
+    );
+
+    const cardClasses = `resume-card animate-in fade-in duration-1000 ${isDeleting ? 'opacity-50 pointer-events-none' : ''} ${
+        isCompareMode ? 'cursor-pointer transition-all hover:scale-[1.02]' : ''
+    } ${
+        isSelected ? 'ring-4 ring-blue-500 shadow-xl scale-[1.02]' : ''
+    }`;
+
+    return (
+        <div className="relative group">
+            {isCompareMode ? (
+                <div 
+                    onClick={onToggleSelect}
+                    className={cardClasses}
+                >
+                    {cardContent}
+                </div>
+            ) : (
+                <Link to={`/resume/${id}`} className={cardClasses}>
+                    {cardContent}
+                </Link>
+            )}
 
             {showDeleteModal && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>

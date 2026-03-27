@@ -34,6 +34,8 @@ export default function Home() {
   const navigate = useNavigate();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loadingResumes, setLoadingResumes] = useState(true);
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedResumes, setSelectedResumes] = useState<string[]>([]);
 
   useEffect(() => {
     if(!auth.isAuthenticated) navigate('/auth?next=/');
@@ -82,6 +84,24 @@ export default function Home() {
         ) : (
             <h2>Review your submissions and check AI-powered feedback.</h2>
         )}
+        
+        {!loadingResumes && resumes.length >= 2 && (
+            <div className="mt-6">
+              <button 
+                  onClick={() => {
+                      setIsCompareMode(!isCompareMode);
+                      setSelectedResumes([]);
+                  }}
+                  className={`px-6 py-2 rounded-full font-semibold border transition-all ${
+                      isCompareMode 
+                          ? 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200' 
+                          : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm'
+                  }`}
+              >
+                  {isCompareMode ? "Cancel Comparison" : "Compare Resumes"}
+              </button>
+            </div>
+        )}
       </div>
 
       {loadingResumes && (
@@ -99,6 +119,15 @@ export default function Home() {
                   key={resume.id} 
                   resume={resume} 
                   onDelete={() => setResumes(prev => prev.filter(r => r.id !== resume.id))} 
+                  isCompareMode={isCompareMode}
+                  isSelected={selectedResumes.includes(resume.id)}
+                  onToggleSelect={() => {
+                      if (selectedResumes.includes(resume.id)) {
+                          setSelectedResumes(prev => prev.filter(id => id !== resume.id));
+                      } else if (selectedResumes.length < 2) {
+                          setSelectedResumes(prev => [...prev, resume.id]);
+                      }
+                  }}
               />
           ))}
         </div>
@@ -110,6 +139,18 @@ export default function Home() {
               Upload Resume
             </Link>
           </div>
+      )}
+
+      {isCompareMode && selectedResumes.length === 2 && (
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <Link 
+            to={`/compare?r1=${selectedResumes[0]}&r2=${selectedResumes[1]}`}
+            className="primary-button !w-auto shadow-2xl px-12 py-4 text-xl flex items-center justify-center gap-3 ring-4 ring-blue-100"
+          >
+            <span>Compare Selected Resumes</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </Link>
+        </div>
       )}
     </section>
   </main>

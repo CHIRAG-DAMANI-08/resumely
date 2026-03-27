@@ -6,6 +6,7 @@ import ATS from "~/components/ATS";
 import Details from "~/components/Details";
 import ScoreHistory from "~/components/ScoreHistory";
 import KeywordGap from "~/components/KeywordGap";
+import BulletRewriter from "~/components/BulletRewriter";
 import { type KeywordGapAnalysis } from "../../constants";
 
 export const meta = () => ([
@@ -21,6 +22,9 @@ const Resume = () => {
     const [feedback, setFeedback] = useState<Feedback | null>(null);
     const [keywordData, setKeywordData] = useState<KeywordGapAnalysis | null>(null);
     const [jobTitle, setJobTitle] = useState('');
+    const [jobDescription, setJobDescription] = useState('');
+    const [resumePath, setResumePath] = useState('');
+    const [imagePath, setImagePath] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -50,6 +54,9 @@ const Resume = () => {
             const data = JSON.parse(resume) as Resume;
 
             setJobTitle(data.jobTitle || '');
+            setJobDescription(data.jobDescription || '');
+            setResumePath(data.resumePath || '');
+            setImagePath(data.imagePath || '');
 
             const resumeBlob = await fs.read(data.resumePath);
             if(!resumeBlob) return;
@@ -110,6 +117,16 @@ const Resume = () => {
                             <KeywordGap data={keywordData} />
                             {auth.user?.uuid && jobTitle && (
                                 <ScoreHistory userId={auth.user.uuid} jobTitle={jobTitle} />
+                            )}
+                            {resumePath && imagePath && jobTitle && jobDescription && (
+                                <div className="mt-8">
+                                    <BulletRewriter
+                                        resumePath={resumePath}
+                                        imagePath={imagePath}
+                                        jobTitle={jobTitle}
+                                        jobDescription={jobDescription}
+                                    />
+                                </div>
                             )}
                         </div>
                     ) : (
